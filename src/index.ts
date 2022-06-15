@@ -55,14 +55,57 @@ scene.add( mesh );*/
 scene.add( new RectAreaLightHelper( rectLight1 ) );
 scene.add( new RectAreaLightHelper( rectLight2 ) );
 scene.add( new RectAreaLightHelper( rectLight3 ) );
-
+const raycaster = new THREE.Raycaster()
+const sceneMeshes: THREE.Mesh[] = []
+const dir = new THREE.Vector3()
+let intersects: THREE.Intersection[] = []
 // CONTROLS
+//crosshair
+const lineMaterial = new THREE.LineBasicMaterial({
+    color: 0x0000ff,
+})
+const points: THREE.Vector3[] = []
+points[0] = new THREE.Vector3(-0.1, 0, 0)
+points[1] = new THREE.Vector3(0.1, 0, 0)
+let lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
+const xLine = new THREE.Line(lineGeometry, lineMaterial)
+scene.add(xLine)
+points[0] = new THREE.Vector3(0, -0.1, 0)
+points[1] = new THREE.Vector3(0, 0.1, 0)
+lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
+const yLine = new THREE.Line(lineGeometry, lineMaterial)
+scene.add(yLine)
+points[0] = new THREE.Vector3(0, 0, -0.1)
+points[1] = new THREE.Vector3(0, 0, 0.1)
+lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
+const zLine = new THREE.Line(lineGeometry, lineMaterial)
+scene.add(zLine)
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true
 orbitControls.minDistance = 5
 orbitControls.maxDistance = 15
 orbitControls.enablePan = false
 orbitControls.maxPolarAngle = Math.PI / 2 - 0.05
+orbitControls.enableDamping = true
+orbitControls.addEventListener('change', function () {
+    xLine.position.copy(orbitControls.target)
+    yLine.position.copy(orbitControls.target)
+    zLine.position.copy(orbitControls.target)
+
+    raycaster.set(
+        orbitControls.target,
+        dir.subVectors(camera.position, orbitControls.target).normalize()
+    )
+
+    intersects = raycaster.intersectObjects(sceneMeshes, false)
+    if (intersects.length > 0) {
+        if (
+            intersects[0].distance < orbitControls.target.distanceTo(camera.position)
+        ) {
+            camera.position.copy(intersects[0].point)
+        }
+    }
+})
 orbitControls.update();
 
 // LIGHTS
@@ -70,7 +113,7 @@ light()
 
 
 // FLOOR
-const geoFloor = new THREE.BoxGeometry( 2000, 0.01, 2000 );
+const geoFloor = new THREE.BoxGeometry( 40, 0.01, 40 );
 const matStdFloor = new THREE.MeshStandardMaterial( { color: 0x000, roughness: 0.1, metalness: 0 } );
 const mshStdFloor = new THREE.Mesh( geoFloor, matStdFloor );
 const mirrorFloor = mshStdFloor.clone();
@@ -92,6 +135,10 @@ new GLTFLoader().load('models/walker4.glb', function (gltf) {
     model.traverse(function (object: any) {
         if (object.isMesh) object.castShadow = true;
     });
+    model.position.y = 0
+    model.position.x = 0
+    model.position.z = -10
+    model.lookAt(0,0,5);
     scene.add(model);
 
     const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
@@ -429,8 +476,8 @@ function wrapAndRepeatTexture (map: THREE.Texture) {
 function light() {
     scene.add(new THREE.AmbientLight(0xffffff, 0.7))
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1)
-    dirLight.position.set(- 60, 100, - 10);
+/*    const dirLight = new THREE.DirectionalLight(0xffffff, 1)
+    dirLight.position.set(0, 100, 0);
     dirLight.castShadow = true;
     dirLight.shadow.camera.top = 50;
     dirLight.shadow.camera.bottom = - 50;
@@ -440,6 +487,6 @@ function light() {
     dirLight.shadow.camera.far = 200;
     dirLight.shadow.mapSize.width = 4096;
     dirLight.shadow.mapSize.height = 4096;
-    scene.add(dirLight);
-    // scene.add( new THREE.CameraHelper(dirLight.shadow.camera))
+    //scene.add(dirLight);
+    scene.add( new THREE.CameraHelper(dirLight.shadow.camera))*/
 }

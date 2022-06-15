@@ -23,6 +23,7 @@ export class KeyDisplay {
         this.map.forEach( (v, k) => {
             v.style.color = 'white'
             v.style.fontFamily = "'Press Start 2P', cursive"
+            v.style.textShadow = "1px 1px #000"
             v.style.fontSize = '30px'
             v.style.fontWeight = '500'
             v.style.position = 'absolute'
